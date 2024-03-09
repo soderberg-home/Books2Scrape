@@ -24,33 +24,8 @@ public class Main {
             throw new RuntimeException(e);
         }
         List<PageLinkScanner> pageLinkScannerList;
-        /*try (ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(8)) {
-       // try (ExecutorService threadPoolExecutor = Executors.newVirtualThreadPerTaskExecutor()) {
 
-                pageLinkScannerList = new ArrayList<>();
-            for (String page : pagerScanner.scannedPages()) {
-                PageLinkScanner pageLinkScanner = new PageLinkScanner(page);
-                pageLinkScannerList.add(pageLinkScanner);
-                threadPoolExecutor.execute(pageLinkScanner);
-            }
-            threadPoolExecutor.shutdown();
-            double numberOfTasks = 1.0 * threadPoolExecutor.getTaskCount();
-            while (!threadPoolExecutor.isTerminated()) {
-                long tasksFinished = threadPoolExecutor.getCompletedTaskCount();
-                long percent = (long)Math.floor(100 * tasksFinished / numberOfTasks);
-                System.out.print(percent);
-
-                try {
-                    sleep(1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }*/
-        //ExecutorService threadPoolExecutor = null;
-        pageLinkScannerList = new ArrayList<>();
         try (ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(8)) {
-            // Initialize the list to store PageLinkScanners
             pageLinkScannerList = new ArrayList<>();
             // Submit tasks to the thread pool
             for (String page : pagerScanner.scannedPages()) {
@@ -58,7 +33,6 @@ public class Main {
                 pageLinkScannerList.add(pageLinkScanner);
                 threadPoolExecutor.execute(pageLinkScanner);
             }
-
             threadPoolExecutor.shutdown(); // Initiate shutdown
             double numberOfTasks = threadPoolExecutor.getTaskCount();
             long lastReportedPercent = -1; // Track the last reported progress
@@ -86,22 +60,33 @@ public class Main {
         }
         System.out.println("Finding links...");
         try (ThreadPoolExecutor downloadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(8)) {
-            // try (ExecutorService downloadPoolExecutor = Executors.newVirtualThreadPerTaskExecutor()) {
-
+            // Submit download tasks for each page
             for (String page : pagerScanner.scannedPages()) {
                 PageDownloader pageDownloader = new PageDownloader(page);
                 downloadPoolExecutor.execute(pageDownloader);
             }
-            downloadPoolExecutor.shutdown();
-            double numberOfTasks = 1.0 * downloadPoolExecutor.getTaskCount();
+            downloadPoolExecutor.shutdown(); // Initiate shutdown of the pool
+
+            double numberOfTasks = downloadPoolExecutor.getTaskCount();
+            long lastReportedPercent = -1; // To track the last reported percentage
+
+            // Monitor the progress and report percentage
             while (!downloadPoolExecutor.isTerminated()) {
                 long tasksFinished = downloadPoolExecutor.getCompletedTaskCount();
                 long percent = (long) Math.floor(100 * tasksFinished / numberOfTasks);
-                System.out.print("+");
+
+                // Only print the percentage if it has changed since the last print
+                if (percent != lastReportedPercent) {
+                    System.out.println(percent + "% completed");
+                    lastReportedPercent = percent; // Update the last reported percentage
+                }
+
+                // Sleep briefly to reduce the frequency of updates
                 try {
-                    sleep(100);
+                    Thread.sleep(100); // Sleep for 100 milliseconds
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    Thread.currentThread().interrupt(); // Restore the interrupted status
+                    throw new RuntimeException("Thread was interrupted", e);
                 }
             }
         }
@@ -109,10 +94,8 @@ public class Main {
         System.out.println("Downloading resources...");
 
         try (ThreadPoolExecutor downloadPoolExecutor2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(8)) {
-            // try (ExecutorService downloadPoolExecutor2 = Executors.newVirtualThreadPerTaskExecutor()) {
-
+            // Submitting tasks for downloading pages and images
             for (PageLinkScanner pageLinkScanner : pageLinkScannerList) {
-                //System.out.println(pageLinkScanner.getPageURI());
                 for (String scanned : pageLinkScanner.scannedHTMLLinks()) {
                     PageDownloader pageDownloader = new PageDownloader(scanned);
                     downloadPoolExecutor2.execute(pageDownloader);
@@ -123,15 +106,26 @@ public class Main {
                 }
             }
             downloadPoolExecutor2.shutdown();
+
+            // Tracking and displaying progress
             double numberOfTasks2 = 1.0 * downloadPoolExecutor2.getTaskCount();
+            long lastPrintedPercent = -1;  // Initialize with an impossible value to ensure the first update is printed
+
             while (!downloadPoolExecutor2.isTerminated()) {
                 long tasksFinished = downloadPoolExecutor2.getCompletedTaskCount();
                 long percent = (long) Math.floor(100 * tasksFinished / numberOfTasks2);
-                System.out.print("+");
+
+                if (percent != lastPrintedPercent) {  // Only print if the percent has changed
+                    System.out.println("Progress: " + percent + "%");
+                    lastPrintedPercent = percent;  // Update last printed percent
+                }
+
+                // Throttle the loop to reduce CPU usage
                 try {
-                    sleep(1000);
+                    Thread.sleep(1000);  // Sleep for 1 second
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    Thread.currentThread().interrupt();  // Set the interrupt flag
+                    throw new RuntimeException("Thread was interrupted", e);
                 }
             }
         }

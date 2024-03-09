@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 
 public class PageDownloader implements Runnable {
 
@@ -19,27 +20,18 @@ public class PageDownloader implements Runnable {
 
     @Override
     public void run() {
-        String html;
         try {
-            html = Jsoup.connect(URI).get().html();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        String fileName = this.URI.replace("https://","/Users/fredriksoderberg/");
-        Path pathToFile = Paths.get(fileName);
+            String html = Jsoup.connect(URI).get().html(); // Fetch HTML content
+            String fileName = URI.replace("https://", "/Users/fredriksoderberg/"); // Construct file name
+            Path pathToFile = Paths.get(fileName); // Get the path to the file
 
-        if(!Files.exists(pathToFile.getParent())){
-            try {
+            // Ensure parent directories exist
+            if (!Files.exists(pathToFile.getParent())) {
                 Files.createDirectories(pathToFile.getParent());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
-        }
-        BufferedWriter writer;
-        try {
-            writer = new BufferedWriter(new FileWriter(fileName));
-            writer.write(html);
-            writer.close();
+
+            // Write HTML content to file
+            Files.write(pathToFile, Collections.singleton(html)); // Use Files.write for simplicity and efficiency
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
