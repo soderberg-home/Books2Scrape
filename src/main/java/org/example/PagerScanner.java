@@ -18,6 +18,7 @@ public class PagerScanner implements Runnable {
     public PagerScanner(URI root) {
         this.root = root;
         pages = new ConcurrentHashMap<>();
+        pages.put("https://books.toscrape.com/index.html",Boolean.TRUE);
     }
 
     @Override

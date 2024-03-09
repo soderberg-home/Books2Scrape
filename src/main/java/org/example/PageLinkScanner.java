@@ -3,6 +3,7 @@ package org.example;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,10 +25,41 @@ public class PageLinkScanner implements Runnable {
     }
 
     //ico, jpg, html,
+    private void processLinks(Document document, String selector, String linkEnding, String fileType) {
+        List<Element> links = document.select(selector).stream()
+                .filter(element -> element.attr("href").endsWith(linkEnding))
+                .toList();
+        numberOfScans += links.size();
+        links.forEach(link -> this.links.put(link.attr("abs:href"), fileType));
+    }
+
+    private void processHtmlImages() {
+        scannedHTMLLinks().forEach(link -> {
+            try {
+                Document doc = Jsoup.connect(link).get();
+                Elements activeItems = doc.getElementsByClass("item active");
+                if (!activeItems.isEmpty()) {
+                    String imgUrl = activeItems.first().getElementsByTag("img").attr("abs:src");
+                    links.put(imgUrl, "jpg");
+                    numberOfScans++;
+                }
+            } catch (IOException e) {
+                System.err.println("Failed to load or process HTML image from: " + link);
+            }
+        });
+    }
+
+    private void processProductImages(Document document) {
+        Elements productElements = document.getElementsByClass("product_pod");
+        numberOfScans += productElements.size();
+        productElements.forEach(product -> {
+            String imgUrl = product.getElementsByClass("thumbnail").first().attr("abs:src");
+            links.put(imgUrl, "jpg");
+        });
+    }
     @Override
     public void run() {
-        try {
-            //TODO:Favico?
+        /*try {
             Document rootDocument = Jsoup.connect(pageURI).get();
             //HTML
             List<Element> rootLinks = rootDocument.select("a[href]").stream().filter(element -> element.attr("href").endsWith(".html")).toList();
@@ -35,6 +67,17 @@ public class PageLinkScanner implements Runnable {
             for(Element element:rootLinks){
                 links.put(element.attr("abs:href"),"html");
             }
+
+            //Html images
+            for(String link : scannedHTMLLinks()){
+                Document doc = Jsoup.connect(link).get();
+                List<Element> e = doc.getElementsByClass("item active");
+                if(!e.isEmpty()){
+                    String url = e.get(0).getElementsByTag("img").attr("abs:src");
+                    links.put(url,"jpg");numberOfScans++;
+                }
+            }
+
             //CSS
             List<Element> cssLinks = rootDocument.select("link").stream().filter(element -> element.attr("href").endsWith("css")).toList();
             numberOfScans += cssLinks.size();
@@ -48,10 +91,32 @@ public class PageLinkScanner implements Runnable {
                 String imgUrl = product.getElementsByClass("thumbnail").first().attr("abs:src");
                 links.put(imgUrl,"jpg");
             }
+
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }*/
+
+
+            try {
+                Document rootDocument = Jsoup.connect(pageURI).get();
+
+                // Extract and process both HTML and CSS links in one step
+                processLinks(rootDocument, "a[href]", ".html", "html");
+                processLinks(rootDocument, "link", "css", "css");
+
+                // Process HTML images
+                processHtmlImages();
+
+                // Process product images
+                processProductImages(rootDocument);
+
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to connect or process the document", e);
+            }
         }
-    }
+
+
+
 
     public Integer numberOfLinks(){
         return links.size();
@@ -73,6 +138,16 @@ public class PageLinkScanner implements Runnable {
         HashSet<String> retVal = new HashSet<>();
         links.forEach((k,val) -> {
             if (val.contains("html")){
+                retVal.add(k);
+            }
+        });
+        return retVal;
+    }
+
+    public Set<String> scannedImageLinks(){
+        HashSet<String> retVal = new HashSet<>();
+        links.forEach((k,val) -> {
+            if (val.contains("jpg")){
                 retVal.add(k);
             }
         });
