@@ -7,22 +7,16 @@ import org.junit.Test;
 
 import java.net.URI;
 
-import static org.junit.Assert.*;
-
 public class PagerScannerTest {
 
     PagerScanner pagerScanner;
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         try {
             pagerScanner = new PagerScanner(URI.create("https://books.toscrape.com"));
         } catch (IllegalArgumentException ex) {
             System.out.println(ex);
         }
-    }
-
-    @After
-    public void tearDown() throws Exception {
     }
 
     @Test

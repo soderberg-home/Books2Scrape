@@ -6,18 +6,17 @@ import org.jsoup.nodes.Element;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class PagerScanner implements Runnable {
 
     private final URI root;
-    ConcurrentHashMap<String, Boolean> pages = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Boolean> pages;
 
     public PagerScanner(URI root) {
         this.root = root;
+        pages = new ConcurrentHashMap<>();
     }
 
     @Override
