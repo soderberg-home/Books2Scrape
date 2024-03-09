@@ -8,38 +8,40 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class PagerScanner {
+public class PagerScanner implements Runnable {
 
     private final URI root;
+    ConcurrentHashMap<String, Boolean> pages = new ConcurrentHashMap<>();
 
     public PagerScanner(URI root) {
         this.root = root;
     }
 
-    void scan() {
-        List<String> pages = new ArrayList<>();
+    @Override
+    public void run() {
         String pageURL = root.toString();
         boolean morePages = true;
         try {
-            System.out.println("Finding number of pages to scan.");
             while (morePages) {
-                System.out.print(".");
                 Document rootDocument = Jsoup.connect(pageURL).get();
                 List<Element> pagers = rootDocument.select("li.next");
                 if (!pagers.isEmpty()) {
                     pageURL = pagers.get(0).select("a[href]").get(0).attr("abs:href");
-                    pages.add(pageURL);
+                    pages.put(pageURL, Boolean.TRUE);
                 } else {
                     morePages = false;
                 }
             }
-            System.out.println("Found: " + pages.size() + " pages to scan.");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
 
+    Integer numberOfPagesScanned(){
+        return pages.size();
+    }
 
 }
