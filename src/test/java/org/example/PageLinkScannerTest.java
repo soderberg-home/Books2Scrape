@@ -5,15 +5,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.net.URI;
-
-import static org.junit.Assert.*;
-
 public class PageLinkScannerTest {
 
     PageLinkScanner pageLinkScanner;
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         try {
             pageLinkScanner = new PageLinkScanner("https://books.toscrape.com");
         } catch (IllegalArgumentException ex) {
@@ -22,7 +18,7 @@ public class PageLinkScannerTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
 
     }
 

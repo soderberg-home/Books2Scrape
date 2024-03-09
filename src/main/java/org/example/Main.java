@@ -18,37 +18,41 @@ public class Main {
             throw new RuntimeException(e);
         }
 
-        ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(4);
-        List<PageLinkScanner> pageLinkScannerList = new ArrayList<>();
-        for(String page : pagerScanner.scannedPages()){
-            PageLinkScanner pageLinkScanner = new PageLinkScanner(page);
-            pageLinkScannerList.add(pageLinkScanner);
-            threadPoolExecutor.execute(pageLinkScanner);
+        List<PageLinkScanner> pageLinkScannerList;
+        try (ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(4)) {
+            pageLinkScannerList = new ArrayList<>();
+            for (String page : pagerScanner.scannedPages()) {
+                PageLinkScanner pageLinkScanner = new PageLinkScanner(page);
+                pageLinkScannerList.add(pageLinkScanner);
+                threadPoolExecutor.execute(pageLinkScanner);
+            }
+
+            threadPoolExecutor.shutdown();
         }
 
-        threadPoolExecutor.shutdown();
-
-        ThreadPoolExecutor downloadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(4);
-        for(String page : pagerScanner.scannedPages()){
-            PageDownloader pageDownloader = new PageDownloader(page);
-            downloadPoolExecutor.execute(pageDownloader);
-        }
-        downloadPoolExecutor.shutdown();
-        while (!downloadPoolExecutor.isTerminated()) {
-            System.out.println( (downloadPoolExecutor.getCompletedTaskCount()) / (1.0 * downloadPoolExecutor.getTaskCount()));
-        }
-
-        ThreadPoolExecutor downloadPoolExecutor2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(4);
-        for(PageLinkScanner pageLinkScanner : pageLinkScannerList){
-            System.out.println(pageLinkScanner.getPageURI());
-            for(String scanned : pageLinkScanner.scannedHTMLLinks()){
-                PageDownloader pageDownloader = new PageDownloader(scanned);
-                downloadPoolExecutor2.execute(pageDownloader);
+        try (ThreadPoolExecutor downloadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(4)) {
+            for (String page : pagerScanner.scannedPages()) {
+                PageDownloader pageDownloader = new PageDownloader(page);
+                downloadPoolExecutor.execute(pageDownloader);
+            }
+            downloadPoolExecutor.shutdown();
+            while (!downloadPoolExecutor.isTerminated()) {
+                System.out.println((downloadPoolExecutor.getCompletedTaskCount()) / (1.0 * downloadPoolExecutor.getTaskCount()));
             }
         }
-        downloadPoolExecutor2.shutdown();
-        while (!downloadPoolExecutor2.isTerminated()) {
-            System.out.println( (downloadPoolExecutor2.getCompletedTaskCount()) / (1.0 * downloadPoolExecutor2.getTaskCount()));
+
+        try (ThreadPoolExecutor downloadPoolExecutor2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(4)) {
+            for (PageLinkScanner pageLinkScanner : pageLinkScannerList) {
+                System.out.println(pageLinkScanner.getPageURI());
+                for (String scanned : pageLinkScanner.scannedHTMLLinks()) {
+                    PageDownloader pageDownloader = new PageDownloader(scanned);
+                    downloadPoolExecutor2.execute(pageDownloader);
+                }
+            }
+            downloadPoolExecutor2.shutdown();
+            while (!downloadPoolExecutor2.isTerminated()) {
+                System.out.println((downloadPoolExecutor2.getCompletedTaskCount()) / (1.0 * downloadPoolExecutor2.getTaskCount()));
+            }
         }
 
     }
