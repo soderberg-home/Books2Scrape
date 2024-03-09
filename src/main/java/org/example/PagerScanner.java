@@ -7,6 +7,7 @@ import org.jsoup.nodes.Element;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class PagerScanner implements Runnable {
@@ -41,6 +42,10 @@ public class PagerScanner implements Runnable {
 
     Integer numberOfPagesScanned(){
         return pages.size();
+    }
+
+    Set<String> scannedPages(){
+        return pages.keySet();
     }
 
 }

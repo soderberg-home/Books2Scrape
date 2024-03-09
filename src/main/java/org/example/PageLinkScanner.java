@@ -6,8 +6,11 @@ import org.jsoup.nodes.Element;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class PageLinkScanner implements Runnable {
 
@@ -65,6 +68,20 @@ public class PageLinkScanner implements Runnable {
     }
     public Integer numberOfCSSLinks(){
         return links.values().stream().filter(s->s.contains("css")).toList().size();
+    }
+
+    public Set<String> scannedHTMLLinks(){
+        HashSet<String> retVal = new HashSet<>();
+        links.forEach((k,val) -> {
+            if (val.contains("html")){
+                retVal.add(k);
+            }
+        });
+        return retVal;
+    }
+
+    public String getPageURI(){
+        return this.pageURI;
     }
 
 }
