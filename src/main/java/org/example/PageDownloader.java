@@ -31,7 +31,7 @@ public class PageDownloader implements Runnable {
         }
         String fileName = this.URI.replace("https://","/Users/fredriksoderberg/");
         Path pathToFile = Paths.get(fileName);
-        System.out.println(pathToFile);
+        //System.out.println(pathToFile);
 
         if(!Files.exists(pathToFile.getParent())){
             try {
