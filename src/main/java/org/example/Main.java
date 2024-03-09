@@ -19,25 +19,46 @@ public class Main {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(4);
+
+       ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(4);
         List<PageLinkScanner> pageLinkScannerList = new ArrayList<>();
         for(String page : pagerScanner.scannedPages()){
             PageLinkScanner pageLinkScanner = new PageLinkScanner(page);
             pageLinkScannerList.add(pageLinkScanner);
             threadPoolExecutor.execute(pageLinkScanner);
         }
-
         try {
             threadPoolExecutor.shutdown();
             threadPoolExecutor.awaitTermination(1,TimeUnit.DAYS);
         } catch(InterruptedException ex) {
             System.out.println("jkjk");
         }
+
+
+        for(String page : pagerScanner.scannedPages()){
+            PageDownloader pageDownloader = new PageDownloader(page);
+            Thread thread = new Thread(pageDownloader);
+            thread.start();
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
         for(PageLinkScanner pageLinkScanner : pageLinkScannerList){
             System.out.println(pageLinkScanner.getPageURI());
-            System.out.println(pageLinkScanner.scannedHTMLLinks());
+            for(String scanned : pageLinkScanner.scannedHTMLLinks()){
+                PageDownloader pageDownloader = new PageDownloader(scanned);
+                Thread thread = new Thread(pageDownloader);
+                thread.start();
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
-
 
 
     }
