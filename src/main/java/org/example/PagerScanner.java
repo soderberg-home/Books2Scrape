@@ -11,7 +11,7 @@ import java.util.List;
 
 public class PagerScanner {
 
-    private URI root;
+    private final URI root;
 
     public PagerScanner(URI root) {
         this.root = root;
@@ -28,7 +28,7 @@ public class PagerScanner {
                 Document rootDocument = Jsoup.connect(pageURL).get();
                 List<Element> pagers = rootDocument.select("li.next");
                 if (!pagers.isEmpty()) {
-                    pageURL = pagers.get(0).select("a[href]").get(0).attr("abs:href").toString();
+                    pageURL = pagers.get(0).select("a[href]").get(0).attr("abs:href");
                     pages.add(pageURL);
                 } else {
                     morePages = false;
