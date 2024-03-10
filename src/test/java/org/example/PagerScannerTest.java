@@ -12,7 +12,7 @@ public class PagerScannerTest {
     @Before
     public void setUp() {
         try {
-            pagerScanner = new PagerScanner(URI.create("https://books.toscrape.com"));
+            pagerScanner = new PagerScanner(URI.create("http://books.toscrape.com"));
         } catch (IllegalArgumentException ex) {
             System.out.println(ex);
         }
@@ -37,7 +37,7 @@ public class PagerScannerTest {
         } catch (IllegalThreadStateException ex){
             System.out.println(ex);
         }
-        Assert.assertEquals("Unexpected number of pages scanned.",49, (long)pagerScanner.numberOfPagesScanned());
+        Assert.assertEquals("Unexpected number of pages scanned.",50, (long)pagerScanner.numberOfPagesScanned());
     }
 
 

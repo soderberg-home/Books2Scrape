@@ -1,6 +1,11 @@
 package org.example;
 
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,12 +18,26 @@ import static java.lang.Thread.sleep;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FileAlreadyExistsException {
+
+        String outputDirName = args[0]; // Assuming the first argument is the output directory
+        Path outputPath = Paths.get(outputDirName);
+
+        if (!Files.exists(outputPath)) {
+            try {
+                Files.createDirectories(outputPath);
+                System.out.println("Storing files in: " + outputDirName);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        } else {
+            throw new FileAlreadyExistsException("File at: " + outputDirName + " already exists.");
+        }
 
         long startTime, endTime, duration;
         startTime = System.currentTimeMillis();
         System.out.println("Performing paging...");
-        PagerScanner pagerScanner = new PagerScanner(URI.create("https://books.toscrape.com"));
+        PagerScanner pagerScanner = new PagerScanner(URI.create("http://books.toscrape.com"));
         Thread scanThread = new Thread(pagerScanner);
         scanThread.start();
         try {
@@ -52,7 +71,7 @@ public class Main {
         System.out.println("Downloading pages...");
         try (ThreadPoolExecutor downloadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(8)) {
             for (String page : pagerScanner.scannedPages()) {
-                PageDownloader pageDownloader = new PageDownloader(page);
+                PageDownloader pageDownloader = new PageDownloader(page, outputDirName);
                 downloadPoolExecutor.execute(pageDownloader);
             }
             downloadPoolExecutor.shutdown();
@@ -66,11 +85,11 @@ public class Main {
         try (ThreadPoolExecutor downloadPoolExecutor2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(8)) {
             for (PageLinkScanner pageLinkScanner : pageLinkScannerList) {
                 for (String scanned : pageLinkScanner.scannedHTMLLinks()) {
-                    PageDownloader pageDownloader = new PageDownloader(scanned);
+                    PageDownloader pageDownloader = new PageDownloader(scanned, outputDirName);
                     downloadPoolExecutor2.execute(pageDownloader);
                 }
                 for (String image : pageLinkScanner.scannedImageLinks()) {
-                    ImageDownloader imageDownloader = new ImageDownloader(image);
+                    ImageDownloader imageDownloader = new ImageDownloader(image, outputDirName);
                     downloadPoolExecutor2.execute(imageDownloader);
                 }
             }

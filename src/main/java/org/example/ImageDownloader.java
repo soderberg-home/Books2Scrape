@@ -3,50 +3,68 @@ package org.example;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 public class ImageDownloader implements Runnable {
 
     private final String URI;
+    private final String parentFolder;
 
-    public ImageDownloader(String URI) {
+    public ImageDownloader(String URI,String parentFolderForOutput) {
         this.URI = URI;
+        this.parentFolder = parentFolderForOutput;
     }
     @Override
     public void run() {
-        try {
-            URL imageUrl = new URL(URI);
+        ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-            String fileName = this.URI.replace("https://","/Users/fredriksoderberg/");
-            Path pathToFile = Paths.get(fileName);
-            if(!Files.exists(pathToFile.getParent())){
-                try {
-                    Files.createDirectories(pathToFile.getParent());
-                } catch (IOException e) {
-                    System.out.println(e);
+        executor.execute(() -> {
+            try {
+                URL imageUrl = new URL(URI);
+
+                // Improved path handling
+                String pathString = this.URI.replace("http://", parentFolder);
+                Path pathToFile = Paths.get(pathString);
+
+                // Ensure parent directories exist
+                Files.createDirectories(pathToFile.getParent());
+
+                // Open a stream to download the image
+                URLConnection connection = imageUrl.openConnection();
+                connection.setConnectTimeout(5000); // 5 seconds connect timeout
+                connection.setReadTimeout(5000);    // 5 seconds read timeout
+
+                try (InputStream in = new BufferedInputStream(connection.getInputStream())) {
+                    // Read the image from the stream
+                    BufferedImage image = ImageIO.read(in);
+                    if (image == null) {
+                        throw new IOException("The image cannot be decoded");
+                    }
+
+                    // Write the image to a file
+                    File outputFile = pathToFile.toFile();
+                    ImageIO.write(image, "jpg", outputFile);
                 }
+            } catch (IOException e) {
+                e.printStackTrace(); // Consider more robust error handling
             }
-            // Open a stream to download the image
-            try (InputStream in = imageUrl.openStream()) {
-                // Read the image from the stream
-                BufferedImage image = ImageIO.read(in);
+        });
 
-                // Output file path
-                File outputFile = new File(fileName);
-
-                // Write the image to a file in JPEG format
-                ImageIO.write(image, "jpg", outputFile);
-
-                //System.out.println("Image downloaded successfully: " + outputFile.getPath());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        executor.shutdown();
+        try {
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // Preserve interrupt status
         }
     }
 }

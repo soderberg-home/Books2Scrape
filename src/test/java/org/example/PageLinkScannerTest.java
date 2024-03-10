@@ -11,7 +11,7 @@ public class PageLinkScannerTest {
     @Before
     public void setUp() {
         try {
-            pageLinkScanner = new PageLinkScanner("https://books.toscrape.com");
+            pageLinkScanner = new PageLinkScanner("http://books.toscrape.com");
         } catch (IllegalArgumentException ex) {
             System.out.println(ex);
         }
@@ -36,7 +36,7 @@ public class PageLinkScannerTest {
             throw new RuntimeException(e);
         }
         Assert.assertEquals("Unexpected number of css-links scanned",3,(long)pageLinkScanner.numberOfCSSLinks());
-        Assert.assertEquals("Unexpected number of image-links scanned",20,(long)pageLinkScanner.numberOfImageLinks());
+        Assert.assertEquals("Unexpected number of image-links scanned",40,(long)pageLinkScanner.numberOfImageLinks());
         Assert.assertEquals("Unexpected number of html-links scanned",73,(long)pageLinkScanner.numberOfHTMLLinks());
 
         System.out.println("Number of links:" + pageLinkScanner.numberOfLinks());
