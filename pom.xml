@@ -47,7 +47,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.example.Main</mainClass> <!-- Specify your main class here -->
+                            <mainClass>org.example.Books2ScrapeDriver</mainClass> <!-- Specify your main class here -->
                         </manifest>
                     </archive>
                     <descriptorRefs>

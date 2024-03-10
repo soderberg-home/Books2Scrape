@@ -6,17 +6,14 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import static java.lang.Thread.sleep;
 
-public class Main {
+public class Books2ScrapeDriver {
 
     public static void main(String[] args) throws FileAlreadyExistsException {
 
