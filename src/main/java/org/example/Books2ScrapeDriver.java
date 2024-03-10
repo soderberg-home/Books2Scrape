@@ -9,7 +9,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Books2ScrapeDriver {
 
@@ -86,7 +88,7 @@ public class Books2ScrapeDriver {
         duration = endTime - startTime;
         System.out.println("Page downloading completed after " + duration + " ms");
         // Resource downloading phase (HTML and images)
-        System.out.println("Downloading resources...");
+       /* System.out.println("Downloading resources...");
         try (ThreadPoolExecutor downloadPoolExecutor2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())) {
             for (PageLinkScanner pageLinkScanner : pageLinkScannerList) {
                 for (String scanned : pageLinkScanner.scannedHTMLLinks()) {
@@ -104,6 +106,74 @@ public class Books2ScrapeDriver {
             }
             downloadPoolExecutor2.shutdown();
             monitorProgress(downloadPoolExecutor2);
+        }*/
+        Semaphore semaphore = new Semaphore(16);
+        System.out.println("Downloading resources...");
+        List<Thread> threads = new ArrayList<>();
+        AtomicInteger completedTasks = new AtomicInteger(0);
+        int totalTasks = pageLinkScannerList.stream().mapToInt(pls -> pls.scannedHTMLLinks().size() + pls.scannedCSSLinks().size() + pls.scannedImageLinks().size()).sum();
+
+        for (PageLinkScanner pageLinkScanner : pageLinkScannerList) {
+            for (String scanned : pageLinkScanner.scannedHTMLLinks()) {
+                PageDownloader pageDownloader = new PageDownloader(scanned, outputDirName);
+                Thread thread = Thread.ofVirtual().start(() -> {
+                    try {
+                        semaphore.acquire();
+                        pageDownloader.run();
+                        completedTasks.incrementAndGet();
+                        System.out.println("Progress: " + (100 * completedTasks.get() / totalTasks) + "%");
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        System.err.println("Resource downloading thread was interrupted.");
+                    } finally {
+                        semaphore.release();
+                    }
+                });
+                threads.add(thread);
+            }
+            for (String cssResources : pageLinkScanner.scannedCSSLinks()) {
+                PageDownloader pageDownloader = new PageDownloader(cssResources, outputDirName);
+                Thread thread = Thread.ofVirtual().start(() -> {
+                    try {
+                        semaphore.acquire();
+                        pageDownloader.run();
+                        completedTasks.incrementAndGet();
+                        System.out.println("Progress: " + (100 * completedTasks.get() / totalTasks) + "%");
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        System.err.println("Resource downloading thread was interrupted.");
+                    } finally {
+                        semaphore.release();
+                    }
+                });
+                threads.add(thread);
+            }
+            for (String image : pageLinkScanner.scannedImageLinks()) {
+                ImageDownloader imageDownloader = new ImageDownloader(image, outputDirName);
+                Thread thread = Thread.ofVirtual().start(() -> {
+                    try {
+                        semaphore.acquire();
+                        imageDownloader.run();
+                        completedTasks.incrementAndGet();
+                        System.out.println("Progress: " + (100 * completedTasks.get() / totalTasks) + "%");
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        System.err.println("Resource downloading thread was interrupted.");
+                    } finally {
+                        semaphore.release();
+                    }
+                });
+                threads.add(thread);
+            }
+        }
+
+        for (Thread thread : threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                System.err.println("Resource downloading thread was interrupted.");
+            }
         }
 
         endTime = System.currentTimeMillis();
