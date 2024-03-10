@@ -12,14 +12,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 
 public class Books2ScrapeDriver {
+
+    private static final Logger LOGGER = Logger.getLogger(Books2ScrapeDriver.class.getName());
 
     public static void main(String[] args) throws FileAlreadyExistsException {
 
         if (args.length != 1) {
-            // Inform the user about the correct usage
-            System.err.println("Usage: java MainClass <OUTPUT-DIRECTORY-PATH>");
+            LOGGER.severe("Usage: java MainClass <OUTPUT-DIRECTORY-PATH>");
             System.exit(1);
         }
 
@@ -33,7 +35,7 @@ public class Books2ScrapeDriver {
         if (!Files.exists(outputPath)) {
             try {
                 Files.createDirectories(outputPath);
-                System.out.println("Storing files in: " + outputDirName);
+                LOGGER.info("Storing files in: " + outputDirName);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
@@ -43,7 +45,7 @@ public class Books2ScrapeDriver {
 
         long startTime, endTime, duration;
         startTime = System.currentTimeMillis();
-        System.out.println("Performing paging...");
+        LOGGER.info("Performing paging...");
         PagerScanner pagerScanner = new PagerScanner(URI.create("http://books.toscrape.com"));
         Thread scanThread = new Thread(pagerScanner);
         scanThread.start();
@@ -51,12 +53,12 @@ public class Books2ScrapeDriver {
             scanThread.join();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            System.err.println("Initial scanning thread was interrupted.");
+            LOGGER.severe("Initial scanning thread was interrupted.");
             return;
         }
         endTime = System.currentTimeMillis();
         duration = endTime - startTime;
-        System.out.println("Paging link scanning completed in " + duration + " ms");
+        LOGGER.info("Paging link scanning completed in " + duration + " ms");
 
         // Page link scanning phase
         List<PageLinkScanner> pageLinkScannerList;
@@ -72,10 +74,10 @@ public class Books2ScrapeDriver {
         }
         endTime = System.currentTimeMillis();
         duration = endTime - startTime;
-        System.out.println("Page link scanning completed after " + duration + " ms");
+        LOGGER.info("Page link scanning completed after " + duration + " ms");
 
         // Page downloading phase
-        System.out.println("Downloading pages...");
+        LOGGER.info("Downloading pages...");
         try (ThreadPoolExecutor downloadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())) {
             for (String page : pagerScanner.scannedPages()) {
                 PageDownloader pageDownloader = new PageDownloader(page, outputDirName);
@@ -86,32 +88,16 @@ public class Books2ScrapeDriver {
         }
         endTime = System.currentTimeMillis();
         duration = endTime - startTime;
-        System.out.println("Page downloading completed after " + duration + " ms");
-        // Resource downloading phase (HTML and images)
-       /* System.out.println("Downloading resources...");
-        try (ThreadPoolExecutor downloadPoolExecutor2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())) {
-            for (PageLinkScanner pageLinkScanner : pageLinkScannerList) {
-                for (String scanned : pageLinkScanner.scannedHTMLLinks()) {
-                    PageDownloader pageDownloader = new PageDownloader(scanned, outputDirName);
-                    downloadPoolExecutor2.execute(pageDownloader);
-                }
-                for (String cssResources : pageLinkScanner.scannedCSSLinks()) {
-                    PageDownloader pageDownloader = new PageDownloader(cssResources, outputDirName);
-                    downloadPoolExecutor2.execute(pageDownloader);
-                }
-                for (String image : pageLinkScanner.scannedImageLinks()) {
-                    ImageDownloader imageDownloader = new ImageDownloader(image, outputDirName);
-                    downloadPoolExecutor2.execute(imageDownloader);
-                }
-            }
-            downloadPoolExecutor2.shutdown();
-            monitorProgress(downloadPoolExecutor2);
-        }*/
-        Semaphore semaphore = new Semaphore(16);
-        System.out.println("Downloading resources...");
+        LOGGER.info("Page downloading completed after " + duration + " ms");
+
+        Semaphore semaphore = new Semaphore(32);
+        LOGGER.info("Downloading resources...");
         List<Thread> threads = new ArrayList<>();
         AtomicInteger completedTasks = new AtomicInteger(0);
+        AtomicInteger printCounter = new AtomicInteger(0);
+
         int totalTasks = pageLinkScannerList.stream().mapToInt(pls -> pls.scannedHTMLLinks().size() + pls.scannedCSSLinks().size() + pls.scannedImageLinks().size()).sum();
+        int printFrequency = totalTasks / 100; // Adjust this value to control the frequency of progress output
 
         for (PageLinkScanner pageLinkScanner : pageLinkScannerList) {
             for (String scanned : pageLinkScanner.scannedHTMLLinks()) {
@@ -121,10 +107,12 @@ public class Books2ScrapeDriver {
                         semaphore.acquire();
                         pageDownloader.run();
                         completedTasks.incrementAndGet();
-                        System.out.println("Progress: " + (100 * completedTasks.get() / totalTasks) + "%");
+                        if (printCounter.incrementAndGet() % printFrequency == 0) {
+                            System.out.println("Progress: " + (100 * completedTasks.get() / totalTasks) + "%");
+                        }
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
-                        System.err.println("Resource downloading thread was interrupted.");
+                        LOGGER.severe("Resource downloading thread was interrupted.");
                     } finally {
                         semaphore.release();
                     }
@@ -138,10 +126,12 @@ public class Books2ScrapeDriver {
                         semaphore.acquire();
                         pageDownloader.run();
                         completedTasks.incrementAndGet();
-                        System.out.println("Progress: " + (100 * completedTasks.get() / totalTasks) + "%");
+                        if (printCounter.incrementAndGet() % printFrequency == 0) {
+                            System.out.println("Progress: " + (100 * completedTasks.get() / totalTasks) + "%");
+                        }
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
-                        System.err.println("Resource downloading thread was interrupted.");
+                        LOGGER.severe("Resource downloading thread was interrupted.");
                     } finally {
                         semaphore.release();
                     }
@@ -155,10 +145,12 @@ public class Books2ScrapeDriver {
                         semaphore.acquire();
                         imageDownloader.run();
                         completedTasks.incrementAndGet();
-                        System.out.println("Progress: " + (100 * completedTasks.get() / totalTasks) + "%");
+                        if (printCounter.incrementAndGet() % printFrequency == 0) {
+                            System.out.println("Progress: " + (100 * completedTasks.get() / totalTasks) + "%");
+                        }
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
-                        System.err.println("Resource downloading thread was interrupted.");
+                        LOGGER.severe("Resource downloading thread was interrupted.");
                     } finally {
                         semaphore.release();
                     }
@@ -172,13 +164,13 @@ public class Books2ScrapeDriver {
                 thread.join();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                System.err.println("Resource downloading thread was interrupted.");
+                LOGGER.severe("Resource downloading thread was interrupted.");
             }
         }
 
         endTime = System.currentTimeMillis();
         duration = endTime - startTime;
-        System.out.println("Process completed after " + duration + " ms");
+        LOGGER.info("Process completed after " + duration + " ms");
     }
 
     private static void monitorProgress(ThreadPoolExecutor executor) {
@@ -198,10 +190,9 @@ public class Books2ScrapeDriver {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                System.err.println("Monitoring thread was interrupted.");
+                LOGGER.severe("Monitoring thread was interrupted.");
                 return; // Exit the function
             }
         }
     }
 }
-

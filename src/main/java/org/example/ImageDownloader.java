@@ -14,7 +14,10 @@ import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
+
 public class ImageDownloader implements Runnable {
+    private static final Logger LOGGER = Logger.getLogger(ImageDownloader.class.getName());
 
     private final String URI;
     private final String parentFolder;
@@ -25,6 +28,7 @@ public class ImageDownloader implements Runnable {
     }
     @Override
     public void run() {
+
         ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
         executor.execute(() -> {
