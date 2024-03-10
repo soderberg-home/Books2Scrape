@@ -4,9 +4,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -59,43 +57,6 @@ public class PageLinkScanner implements Runnable {
     }
     @Override
     public void run() {
-        /*try {
-            Document rootDocument = Jsoup.connect(pageURI).get();
-            //HTML
-            List<Element> rootLinks = rootDocument.select("a[href]").stream().filter(element -> element.attr("href").endsWith(".html")).toList();
-            numberOfScans = rootLinks.size();
-            for(Element element:rootLinks){
-                links.put(element.attr("abs:href"),"html");
-            }
-
-            //Html images
-            for(String link : scannedHTMLLinks()){
-                Document doc = Jsoup.connect(link).get();
-                List<Element> e = doc.getElementsByClass("item active");
-                if(!e.isEmpty()){
-                    String url = e.get(0).getElementsByTag("img").attr("abs:src");
-                    links.put(url,"jpg");numberOfScans++;
-                }
-            }
-
-            //CSS
-            List<Element> cssLinks = rootDocument.select("link").stream().filter(element -> element.attr("href").endsWith("css")).toList();
-            numberOfScans += cssLinks.size();
-            for(Element cssLink : cssLinks){
-                links.put(cssLink.attr("abs:href"),"css");
-            }
-            //Products images
-            ArrayList<Element> products = rootDocument.getElementsByClass("product_pod");
-            numberOfScans += products.size();
-            for(Element product : products){
-                String imgUrl = product.getElementsByClass("thumbnail").first().attr("abs:src");
-                links.put(imgUrl,"jpg");
-            }
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }*/
-
 
             try {
                 Document rootDocument = Jsoup.connect(pageURI).get();
@@ -114,9 +75,6 @@ public class PageLinkScanner implements Runnable {
                 throw new RuntimeException("Failed to connect or process the document", e);
             }
         }
-
-
-
 
     public Integer numberOfLinks(){
         return links.size();
@@ -148,6 +106,16 @@ public class PageLinkScanner implements Runnable {
         HashSet<String> retVal = new HashSet<>();
         links.forEach((k,val) -> {
             if (val.contains("jpg")){
+                retVal.add(k);
+            }
+        });
+        return retVal;
+    }
+
+    public Set<String> scannedCSSLinks(){
+        HashSet<String> retVal = new HashSet<>();
+        links.forEach((k,val) -> {
+            if (val.contains("css")){
                 retVal.add(k);
             }
         });

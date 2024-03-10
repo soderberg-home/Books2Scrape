@@ -19,10 +19,12 @@ Project is set up to use Java 21 using Maven.
 
 `java -jar target/Books2Scrape-1.0-SNAPSHOT-jar-with-dependencies.jar /Users/fredriksoderberg/tests/`
 
-## Known Issues
+## Known Issues (Content)
 
-- Issue 1
-- Issue 2
+- Star rating icons missing
+- Buttons for next/previous pager missing
 - 
 
+## Known Issues (Performance)
 
+- 

@@ -13,13 +13,8 @@ public class PageLinkScannerTest {
         try {
             pageLinkScanner = new PageLinkScanner("http://books.toscrape.com");
         } catch (IllegalArgumentException ex) {
-            System.out.println(ex);
+            System.out.println(ex); //TODO: Throwable argument to println call
         }
-    }
-
-    @After
-    public void tearDown() {
-
     }
 
     @Test
@@ -31,7 +26,7 @@ public class PageLinkScannerTest {
             System.out.println("Running Scanner");
             scanThread.join();
         } catch (IllegalThreadStateException ex){
-            System.out.println(ex);
+            System.out.println(ex); //TODO: Throwable argument to println call
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }

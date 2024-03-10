@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
-import static java.lang.Thread.sleep;
 
 public class Books2ScrapeDriver {
 
@@ -92,6 +91,10 @@ public class Books2ScrapeDriver {
             for (PageLinkScanner pageLinkScanner : pageLinkScannerList) {
                 for (String scanned : pageLinkScanner.scannedHTMLLinks()) {
                     PageDownloader pageDownloader = new PageDownloader(scanned, outputDirName);
+                    downloadPoolExecutor2.execute(pageDownloader);
+                }
+                for (String cssResources : pageLinkScanner.scannedCSSLinks()) {
+                    PageDownloader pageDownloader = new PageDownloader(cssResources, outputDirName);
                     downloadPoolExecutor2.execute(pageDownloader);
                 }
                 for (String image : pageLinkScanner.scannedImageLinks()) {

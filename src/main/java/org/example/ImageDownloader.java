@@ -29,7 +29,7 @@ public class ImageDownloader implements Runnable {
 
         executor.execute(() -> {
             try {
-                URL imageUrl = new URL(URI);
+                URL imageUrl = new URL(URI); //TODO: deprecated
                 String pathString = this.URI.replace("http://", parentFolder);
                 Path pathToFile = Paths.get(pathString);
 
