@@ -27,20 +27,19 @@ public class PageDownloader implements Runnable {
 
     @Override
     public void run() {
-        ExecutorService executor = Executors.newCachedThreadPool(); // For asynchronous tasks
-
+        ExecutorService executor = Executors.newCachedThreadPool();
         try {
             CompletableFuture<String> htmlFuture = CompletableFuture.supplyAsync(() -> {
                 try {
-                    // Set timeouts to avoid hanging indefinitely
-                    Connection connection = Jsoup.connect(URI).timeout(10_000); // 10 seconds timeout
-                    return connection.get().html(); // Fetch HTML content asynchronously
+                    // Set timeouts
+                    Connection connection = Jsoup.connect(URI).timeout(10_000);
+                    return connection.get().html();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }, executor);
 
-            String html = htmlFuture.get(); // Wait for the HTML content to be fetched
+            String html = htmlFuture.get();
             String fileName = URI.replace("http://", parentFolder); // Construct file name
             Path pathToFile = Paths.get(fileName); // Get the path to the file
 
@@ -51,12 +50,12 @@ public class PageDownloader implements Runnable {
 
             // Write HTML content to file
             try (BufferedWriter writer = Files.newBufferedWriter(pathToFile)) {
-                writer.write(html); // Use BufferedWriter for large files
+                writer.write(html);
             }
         } catch (IOException | ExecutionException | InterruptedException e) {
             throw new RuntimeException(e);
         } finally {
-            executor.shutdown(); // Always remember to shut down the executor
+            executor.shutdown();
         }
     }
 }

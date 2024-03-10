@@ -1,6 +1,5 @@
 package org.example;
 
-
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
@@ -31,8 +30,6 @@ public class ImageDownloader implements Runnable {
         executor.execute(() -> {
             try {
                 URL imageUrl = new URL(URI);
-
-                // Improved path handling
                 String pathString = this.URI.replace("http://", parentFolder);
                 Path pathToFile = Paths.get(pathString);
 
@@ -41,8 +38,8 @@ public class ImageDownloader implements Runnable {
 
                 // Open a stream to download the image
                 URLConnection connection = imageUrl.openConnection();
-                connection.setConnectTimeout(5000); // 5 seconds connect timeout
-                connection.setReadTimeout(5000);    // 5 seconds read timeout
+                connection.setConnectTimeout(5000); // 5 seconds timeout
+                connection.setReadTimeout(5000);
 
                 try (InputStream in = new BufferedInputStream(connection.getInputStream())) {
                     // Read the image from the stream
@@ -56,7 +53,7 @@ public class ImageDownloader implements Runnable {
                     ImageIO.write(image, "jpg", outputFile);
                 }
             } catch (IOException e) {
-                e.printStackTrace(); // Consider more robust error handling
+                e.printStackTrace(); //TODO: improve with something more robust
             }
         });
 
