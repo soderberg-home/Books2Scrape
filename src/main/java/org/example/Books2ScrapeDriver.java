@@ -17,7 +17,17 @@ public class Books2ScrapeDriver {
 
     public static void main(String[] args) throws FileAlreadyExistsException {
 
-        String outputDirName = args[0]; // Assuming the first argument is the output directory
+        if (args.length != 1) {
+            // Inform the user about the correct usage
+            System.err.println("Usage: java MainClass <OUTPUT-DIRECTORY-PATH>");
+            System.exit(1);
+        }
+
+        String outputDirName = args[0];
+        if(!outputDirName.endsWith("/")){
+            outputDirName = outputDirName + "/";
+        }
+
         Path outputPath = Paths.get(outputDirName);
 
         if (!Files.exists(outputPath)) {

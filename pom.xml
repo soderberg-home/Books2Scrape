@@ -3,17 +3,14 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>org.example</groupId>
     <artifactId>Books2Scrape</artifactId>
     <version>1.0-SNAPSHOT</version>
-
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
@@ -33,21 +30,16 @@
             <type>maven-plugin</type>
         </dependency>
     </dependencies>
-
     <build>
         <plugins>
-            <!-- Other plugins -->
-
-            <!-- Add the Maven Assembly Plugin -->
             <plugin>
-
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.6.0</version>
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.example.Books2ScrapeDriver</mainClass> <!-- Specify your main class here -->
+                            <mainClass>org.example.Books2ScrapeDriver</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
@@ -56,17 +48,14 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <id>make-assembly</id> <!-- This is used for inheritance merges -->
-                        <phase>package</phase> <!-- Bind to the packaging phase -->
+                        <id>make-assembly</id>
+                        <phase>package</phase>
                         <goals>
-                            <goal>single</goal> <!-- Goals to execute -->
+                            <goal>single</goal>
                         </goals>
                     </execution>
                 </executions>
             </plugin>
-
-            <!-- Other plugins -->
         </plugins>
     </build>
-
 </project>
