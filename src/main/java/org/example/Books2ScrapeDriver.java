@@ -58,7 +58,7 @@ public class Books2ScrapeDriver {
 
         // Page link scanning phase
         List<PageLinkScanner> pageLinkScannerList;
-        try (ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(8)) {
+        try (ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())) {
             pageLinkScannerList = new ArrayList<>();
             for (String page : pagerScanner.scannedPages()) {
                 PageLinkScanner pageLinkScanner = new PageLinkScanner(page);
@@ -74,7 +74,7 @@ public class Books2ScrapeDriver {
 
         // Page downloading phase
         System.out.println("Downloading pages...");
-        try (ThreadPoolExecutor downloadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(8)) {
+        try (ThreadPoolExecutor downloadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())) {
             for (String page : pagerScanner.scannedPages()) {
                 PageDownloader pageDownloader = new PageDownloader(page, outputDirName);
                 downloadPoolExecutor.execute(pageDownloader);
@@ -87,7 +87,7 @@ public class Books2ScrapeDriver {
         System.out.println("Page downloading completed after " + duration + " ms");
         // Resource downloading phase (HTML and images)
         System.out.println("Downloading resources...");
-        try (ThreadPoolExecutor downloadPoolExecutor2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(8)) {
+        try (ThreadPoolExecutor downloadPoolExecutor2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())) {
             for (PageLinkScanner pageLinkScanner : pageLinkScannerList) {
                 for (String scanned : pageLinkScanner.scannedHTMLLinks()) {
                     PageDownloader pageDownloader = new PageDownloader(scanned, outputDirName);
