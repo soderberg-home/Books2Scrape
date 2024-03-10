@@ -14,15 +14,17 @@ import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
 public class ImageDownloader implements Runnable {
 
     private final String URI;
     private final String parentFolder;
 
-    public ImageDownloader(String URI,String parentFolderForOutput) {
+    public ImageDownloader(String URI, String parentFolderForOutput) {
         this.URI = URI;
         this.parentFolder = parentFolderForOutput;
     }
+
     @Override
     public void run() {
         ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());

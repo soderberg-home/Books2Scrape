@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class PagerScanner implements Runnable {
-
+    //CLass to scan all pages from the paging mechanism as described in the README.md
     private final URI root;
     private final ConcurrentHashMap<String, Boolean> pages;
 

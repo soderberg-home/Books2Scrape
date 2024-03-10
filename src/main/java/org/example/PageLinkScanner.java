@@ -92,7 +92,7 @@ public class PageLinkScanner implements Runnable {
         return links.values().stream().filter(s->s.contains("css")).toList().size();
     }
 
-    public Set<String> scannedHTMLLinks(){
+    public Set<String> scannedHTMLLinks(){ //TODO: repeated code
         HashSet<String> retVal = new HashSet<>();
         links.forEach((k,val) -> {
             if (val.contains("html")){
@@ -102,7 +102,7 @@ public class PageLinkScanner implements Runnable {
         return retVal;
     }
 
-    public Set<String> scannedImageLinks(){
+    public Set<String> scannedImageLinks(){ //TODO: repeated code
         HashSet<String> retVal = new HashSet<>();
         links.forEach((k,val) -> {
             if (val.contains("jpg")){
@@ -112,7 +112,7 @@ public class PageLinkScanner implements Runnable {
         return retVal;
     }
 
-    public Set<String> scannedCSSLinks(){
+    public Set<String> scannedCSSLinks(){ //TODO: repeated code
         HashSet<String> retVal = new HashSet<>();
         links.forEach((k,val) -> {
             if (val.contains("css")){

@@ -10,20 +10,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.logging.Logger;
 
 public class Books2ScrapeDriver {
 
+    private static final Logger LOGGER = Logger.getLogger(Books2ScrapeDriver.class.getName());
+
     public static void main(String[] args) throws FileAlreadyExistsException {
 
+        //Check so that input arguments are according to the expected
         if (args.length != 1) {
-            // Inform the user about the correct usage
+            //Inform the user about the correct usage
             System.err.println("Usage: java MainClass <OUTPUT-DIRECTORY-PATH>");
             System.exit(1);
         }
 
+        //This is the path to the output directory.
         String outputDirName = args[0];
         if(!outputDirName.endsWith("/")){
-            outputDirName = outputDirName + "/";
+            outputDirName = outputDirName + "/"; //Make sure that path ends with a slash.
         }
 
         Path outputPath = Paths.get(outputDirName);
@@ -36,12 +41,14 @@ public class Books2ScrapeDriver {
                 throw new RuntimeException(ex);
             }
         } else {
+            //If output directory exists we exit. An option is to delete the directory
+            //but it is better to let the user decide what to do
             throw new FileAlreadyExistsException("File at: " + outputDirName + " already exists.");
         }
 
-        long startTime, endTime, duration;
+        long startTime, endTime, duration; //Simple timer used for primitive optimisation purposes
         startTime = System.currentTimeMillis();
-        System.out.println("Performing paging...");
+        LOGGER.info("Performing paging...");
         PagerScanner pagerScanner = new PagerScanner(URI.create("http://books.toscrape.com"));
         Thread scanThread = new Thread(pagerScanner);
         scanThread.start();
@@ -54,9 +61,9 @@ public class Books2ScrapeDriver {
         }
         endTime = System.currentTimeMillis();
         duration = endTime - startTime;
-        System.out.println("Paging link scanning completed in " + duration + " ms");
+        LOGGER.info("Paging link scanning completed in " + duration + " ms");
 
-        // Page link scanning phase
+        // Page link scanning phase. See README for details
         List<PageLinkScanner> pageLinkScannerList;
         try (ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())) {
             pageLinkScannerList = new ArrayList<>();
@@ -70,10 +77,10 @@ public class Books2ScrapeDriver {
         }
         endTime = System.currentTimeMillis();
         duration = endTime - startTime;
-        System.out.println("Page link scanning completed after " + duration + " ms");
+        LOGGER.info("Page link scanning completed after " + duration + " ms");
 
-        // Page downloading phase
-        System.out.println("Downloading pages...");
+        // Page downloading phase. See README for details
+        LOGGER.info("Downloading pages...");
         try (ThreadPoolExecutor downloadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())) {
             for (String page : pagerScanner.scannedPages()) {
                 PageDownloader pageDownloader = new PageDownloader(page, outputDirName);
@@ -84,9 +91,9 @@ public class Books2ScrapeDriver {
         }
         endTime = System.currentTimeMillis();
         duration = endTime - startTime;
-        System.out.println("Page downloading completed after " + duration + " ms");
+        LOGGER.info("Page downloading completed after " + duration + " ms");
         // Resource downloading phase (HTML and images)
-        System.out.println("Downloading resources...");
+        LOGGER.info("Downloading resources...");
         try (ThreadPoolExecutor downloadPoolExecutor2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())) {
             for (PageLinkScanner pageLinkScanner : pageLinkScannerList) {
                 for (String scanned : pageLinkScanner.scannedHTMLLinks()) {
@@ -108,10 +115,11 @@ public class Books2ScrapeDriver {
 
         endTime = System.currentTimeMillis();
         duration = endTime - startTime;
-        System.out.println("Process completed after " + duration + " ms");
+        LOGGER.info("Process completed after " + duration + " ms");
     }
 
     private static void monitorProgress(ThreadPoolExecutor executor) {
+        //Report progress to the user as a percentage
         double numberOfTasks = 1.0 * executor.getTaskCount();
         long lastReportedPercent = -1;
 
@@ -125,11 +133,11 @@ public class Books2ScrapeDriver {
             }
 
             try {
-                Thread.sleep(1000);
+                Thread.sleep(1000); //TODO: Not very nice. Consider using a more sophisticated approach
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 System.err.println("Monitoring thread was interrupted.");
-                return; // Exit the function
+                return;
             }
         }
     }
