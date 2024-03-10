@@ -44,8 +44,10 @@ example (Mac):
 ## Known Issues (Performance)
 
 - Virtual threads can be used to improve performance (together with a small delay between requests).
+  - Mac Mini 8GB M1, master: INFO: Process completed after 153192 ms
+  - Mac Mini 8GB M1, feature-virtual-threads: INFO: Process completed after 95830 ms
 - This is a first version of the program. It has been developed according to the instructions within a few hours (3-6) of coding.
 - The program is not fully optimised for performance. It is a first version that can be improved in many ways.
 - Next step would be to verify the program with a profiler and then optimise the code accordingly.
 - Another check that I would like to perform is to verify that Jsoup is used in the most efficient way and that the scan is efficient.
-- 
+
