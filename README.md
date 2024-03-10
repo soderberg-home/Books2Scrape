@@ -21,7 +21,7 @@ example (Mac):
 
 `java -jar target/Books2Scrape-1.0-SNAPSHOT-jar-with-dependencies.jar /Users/username/tests/`
 
-`<OUTPUT-PATH> should end with a `/`. If not present it will be added. 
+`<OUTPUT-PATH> should end with a slash character (/). If not present it will be added. 
 
 ## Known Issues (Content)
 
